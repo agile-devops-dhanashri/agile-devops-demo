@@ -1,0 +1,62 @@
+name: Agile DevOps CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+
+  test:
+    name: Test Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Verify HTML File
+        run: |
+          test -f index.html
+          echo "index.html exists."
+
+      - name: Run Application Test
+        run: |
+          grep -q "Agile Planning with DevOps Automation" index.html
+          echo "Application test passed."
+
+  deploy:
+    name: Build and Deploy
+    needs: test
+    if: github.event_name == 'push'
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
